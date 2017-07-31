@@ -1,0 +1,10 @@
+.idea
+.settings
+*.iml
+.DS_Store
+target/
+.project
+api/.classpath
+api/.project
+omod/.classpath
+omod/.project

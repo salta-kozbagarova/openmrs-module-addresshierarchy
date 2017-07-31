@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--   <!DOCTYPE module PUBLIC "-//OpenMRS//DTD OpenMRS Config 1.0//EN" "http://resources.openmrs.org/doctype/config-1.0.dtd"> -->
+
+<module configVersion="1.0">
+
+	<!-- Base Module Properties -->
+	<id>@MODULE_ID@</id>
+	<name>@MODULE_NAME@</name>
+	<version>${project.parent.version}</version>
+	<package>@MODULE_PACKAGE@</package>
+	<author>Sri Prasanna, John DeRiggi, Mark Goodrich</author>
+	<description>
+		Allows for the entry of structured addresses.
+	</description>
+
+	<activator>org.openmrs.module.addresshierarchy.AddressHierarchyActivator</activator>
+
+	<updateURL>https://modules.openmrs.org/modules/download/@MODULE_ID@/update.rdf</updateURL>
+
+	<!-- /Base Module Properties -->
+
+	<require_version>1.9.0</require_version>
+
+	<aware_of_modules>
+		<aware_of_module>org.openmrs.module.legacyui</aware_of_module>
+	</aware_of_modules>
+
+	<!-- Extensions -->
+	<extension>
+		<point>org.openmrs.admin.list</point>
+		<class>org.openmrs.module.addresshierarchy.web.extension.html.AdminList</class>
+	</extension>
+
+	<!-- Required Privileges -->
+	<privilege>
+		<name>Manage Address Hierarchy</name>
+		<description>Allows user to access/modify the defined address hierarchy</description>
+	</privilege>
+	<!-- /Required Privileges -->
+
+	<!-- Mapping files -->
+	<mappingFiles>
+		AddressHierarchyEntry.hbm.xml
+		AddressHierarchyLevel.hbm.xml
+		AddressToEntryMap.hbm.xml
+	</mappingFiles>
+	<!-- /Mapping files -->
+
+
+	<!-- Required Global Properties -->
+	<globalProperty>
+		<property>addresshierarchy.allowFreetext</property>
+		<defaultValue>true</defaultValue>
+		<description>
+			Valid values: true/false. When overriding the address portlet, allow the entry of free text for address fields associated with the address hierarchy by providing an "Other" option
+		</description>
+	</globalProperty>
+	<globalProperty>
+		<property>addresshierarchy.enableOverrideOfAddressPortlet</property>
+		<defaultValue>true</defaultValue>
+		<description>
+			Valid values: true/false. When enabled, the existing "edit" component of the address portlet is overridden by the new functionality provided by the address hierarchy module
+		</description>
+	</globalProperty>
+	<globalProperty>
+		<property>addresshierarchy.soundexProcessor</property>
+		<defaultValue></defaultValue>
+		<description>
+			If the Name Phonetics module is installed, this defines the name of a soundex algorithm used by the getPossibleFullAddresses service method. 
+		</description>
+	</globalProperty>
+	<globalProperty>
+		<property>addresshierarchy.addressToEntryMapUpdaterLastStartTime</property>
+		<defaultValue></defaultValue>
+		<description>
+			The module uses this field to store when the AddressToEntryMapUpdater task was last started; DO NOT MODIFY
+		</description>
+	</globalProperty>
+	<globalProperty>
+		<property>addresshierarchy.initializeAddressHierarchyCacheOnStartup</property>
+		<defaultValue>true</defaultValue>
+		<description>
+			Sets whether to initialize the address hierarchy in-memory cache (which is used to speed up address hierarchy searches.
+			Generally, you want to set this to "true", though developers may want to set it to false during development
+			to speed module start-up.
+		</description>
+	</globalProperty>
+
+
+	<!-- Internationalization -->
+	<!-- All message codes should start with @MODULE_ID@.* -->
+	<messages>
+		<lang>en</lang>
+		<file>messages.properties</file>
+	</messages>
+	<messages>
+		<lang>fr</lang>
+		<file>messages_fr.properties</file>
+	</messages>  
+<!--  	<messages>
+<lang>es</lang>
+<file>messages_es.properties</file>
+</messages>-->
+<!-- /Internationalization -->
+
+
+</module>
