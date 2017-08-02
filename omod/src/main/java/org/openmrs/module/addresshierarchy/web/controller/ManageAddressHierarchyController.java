@@ -269,7 +269,10 @@ public class ManageAddressHierarchyController {
 		
 		// do the actual update
 		try {
-			AddressHierarchyLevel level = Context.getService(AddressHierarchyService.class).getAddressHierarchyLevel(levelId);
+			AddressHierarchyLevel level = null;
+			if(levelId!=null){
+				level = Context.getService(AddressHierarchyService.class).getAddressHierarchyLevel(levelId);
+			}
 			// delete old records if overwrite has been selected
 			if (overwrite != null && overwrite == true) {
 				if(levelId != null && levelId != 0){

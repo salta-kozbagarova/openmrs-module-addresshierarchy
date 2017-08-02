@@ -44,7 +44,8 @@ public class AddressHierarchyAjaxController {
 	 */
 	@RequestMapping("/module/addresshierarchy/ajax/getChildAddressHierarchyEntries.form")
 	 public void getChildAddressHierarchyEntries(ModelMap model, HttpServletRequest request, HttpServletResponse response,
-					                             @RequestParam(value = "searchString", required = false) String searchString) throws Exception {
+					                             @RequestParam(value = "searchString", required = false) String searchString,
+					                             @RequestParam(value = "index", required = true) Integer index) throws Exception {
 
 		AddressHierarchyService ahService = Context.getService(AddressHierarchyService.class);
 
@@ -54,7 +55,7 @@ public class AddressHierarchyAjaxController {
 		if (StringUtils.isBlank(searchString)) {
 			List<AddressHierarchyLevel> levels = ahService.getOrderedAddressHierarchyLevels(false);
 			if (levels != null && levels.size() > 0) {
-				for (AddressHierarchyEntry entry : ahService.getAddressHierarchyEntriesByLevel(levels.get(0))) {
+				for (AddressHierarchyEntry entry : ahService.getAddressHierarchyEntriesByLevel(levels.get(index))) {
 					childEntryNames.add(entry.getName());
 				}
 			}
@@ -270,6 +271,7 @@ public class AddressHierarchyAjaxController {
             String fieldName = (hierarchyLevel.getAddressField() != null) ? hierarchyLevel.getAddressField().getName() : null;
             modelMap.addAttribute("addressField", fieldName);
             modelMap.addAttribute("required", hierarchyLevel.getRequired());
+            modelMap.addAttribute("nonHierarchical", hierarchyLevel.getNonHierarchical());
 			if (hierarchyLevel.getAddressField() != null ) {
 				map.add(modelMap);
 			}

@@ -564,9 +564,11 @@ public class AddressHierarchyServiceImpl implements AddressHierarchyService {
 			
 			if(getNonHierarchicalAddressLevels() != null){
 				List<AddressHierarchyLevel> nonHierarchicalLevels = getNonHierarchicalAddressLevels();
-				if ((includeUnmapped == true) 
-						&& (includeEmptyLevels == true)) {	
-					levels.addAll(nonHierarchicalLevels);
+				for (AddressHierarchyLevel nonHierarchicalLevel : nonHierarchicalLevels) {
+					if ((includeUnmapped == true || nonHierarchicalLevel.getAddressField() != null) 
+							&& (includeEmptyLevels == true ||  getAddressHierarchyEntryCountByLevel(nonHierarchicalLevel) > 0)) {	
+						levels.add(nonHierarchicalLevel);
+					}
 				}
 			}
 		}
@@ -595,10 +597,16 @@ public class AddressHierarchyServiceImpl implements AddressHierarchyService {
 		
 		// get the ordered list
 		List<AddressHierarchyLevel> levels = getOrderedAddressHierarchyLevels();
-		
+		List<AddressHierarchyLevel> addressHierarchyLevels = new ArrayList<AddressHierarchyLevel>();
+		// remove the non-hierarchical addresses
+		for (AddressHierarchyLevel level : levels) {
+			if(!level.getNonHierarchical()){
+				addressHierarchyLevels.add(level);
+			}
+		}
 		// return the last member in the list
-		if (levels != null && levels.size() > 0) {
-			return levels.get(levels.size() - 1);
+		if (addressHierarchyLevels != null && addressHierarchyLevels.size() > 0) {
+			return addressHierarchyLevels.get(addressHierarchyLevels.size() - 1);
 		}
 		else {
 			return null;
