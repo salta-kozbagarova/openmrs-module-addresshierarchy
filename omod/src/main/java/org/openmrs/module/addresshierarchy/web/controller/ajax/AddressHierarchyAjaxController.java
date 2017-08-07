@@ -10,6 +10,7 @@ import org.openmrs.module.addresshierarchy.AddressHierarchyEntry;
 import org.openmrs.module.addresshierarchy.AddressHierarchyLevel;
 import org.openmrs.module.addresshierarchy.exception.AddressHierarchyModuleException;
 import org.openmrs.module.addresshierarchy.service.AddressHierarchyService;
+import org.openmrs.module.addresshierarchy.util.AddressHierarchyImportUtil;
 import org.openmrs.module.addresshierarchy.util.AddressHierarchyUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -21,10 +22,16 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -49,14 +56,14 @@ public class AddressHierarchyAjaxController {
 
 		AddressHierarchyService ahService = Context.getService(AddressHierarchyService.class);
 
-		List<String> childEntryNames = new ArrayList<String>();
+		Map<Integer,String> childEntryNames = new HashMap<Integer, String>();
 
 		// if the search parameter is empty, we just want all items at in the top mapped level
 		if (StringUtils.isBlank(searchString)) {
 			List<AddressHierarchyLevel> levels = ahService.getOrderedAddressHierarchyLevels(false);
 			if (levels != null && levels.size() > 0) {
 				for (AddressHierarchyEntry entry : ahService.getAddressHierarchyEntriesByLevel(levels.get(index))) {
-					childEntryNames.add(entry.getName());
+					childEntryNames.put(entry.getId(), entry.getName());
 				}
 			}
 		}
@@ -84,7 +91,53 @@ public class AddressHierarchyAjaxController {
 
 		}
 
-		generateAddressHierarchyEntryNamesResponse(response, childEntryNames);
+		generateAddressHierarchyEntryMapResponse(response, childEntryNames);
+	}
+	
+	/**
+	 * Returns a list of child address hierarchy entries in JSON format
+	 *
+	 * The parent entry is specified by a string in the format "UNITED STATES|MASSACHUSETTS|PLYMOUTH COUNTY"
+	 */
+	@RequestMapping("/module/addresshierarchy/ajax/addNewAddressHierarchyEntry.form")
+	 public ModelMap addNewAddressHierarchyEntry(ModelMap model, HttpServletRequest request, HttpServletResponse response,
+					                             @RequestParam(value = "entryName", required = true) String entryName,
+					                             @RequestParam(value = "levelId", required = true) Integer levelId,
+					                             @RequestParam(value = "parentEntryId", required = false) Integer parentEntryId) throws Exception {
+
+		AddressHierarchyService ahService = Context.getService(AddressHierarchyService.class);
+		AddressHierarchyLevel level = ahService.getAddressHierarchyLevel(levelId);
+		
+		if(level == null){
+			throw new AddressHierarchyModuleException("Address hierarchy level has not been found");
+		}
+		
+		List<AddressHierarchyEntry> existingEntries = new LinkedList<AddressHierarchyEntry>();
+		AddressHierarchyEntry parentEntry = (parentEntryId == null) ? null : ahService.getAddressHierarchyEntry(parentEntryId);
+		
+		AddressHierarchyEntry entry = new AddressHierarchyEntry();
+		if(parentEntry == null){
+			existingEntries = ahService.getAddressHierarchyEntriesByLevelAndName(level, entryName);
+		}
+		else{
+			existingEntries = ahService.getAddressHierarchyEntriesByLevelAndNameAndParent(level, entryName, parentEntry);
+		}
+    	if(existingEntries != null && existingEntries.size()>0){
+    		entry = existingEntries.get(0);
+    		log.info("Entry with a given name already exists");
+			// return an empty response
+			generateAddressHierarchyEntryMapResponse(response, null);
+    	}
+    	
+		entry.setName(entryName);
+        entry.setLevel(level);
+        entry.setParent(parentEntry);
+        ahService.saveAddressHierarchyEntry(entry);
+        
+        ModelMap modelMap = new ModelMap();
+        modelMap.addAttribute("id", entry.getId());
+        modelMap.addAttribute("name", entry.getName());
+        return modelMap;
 	}
 
 	/**
@@ -267,6 +320,7 @@ public class AddressHierarchyAjaxController {
         ArrayList<ModelMap> map = new ArrayList<ModelMap>();
         for (AddressHierarchyLevel hierarchyLevel : hierarchyLevels) {
             ModelMap modelMap = new ModelMap();
+            modelMap.addAttribute("id", hierarchyLevel.getId());
             modelMap.addAttribute("name", hierarchyLevel.getName());
             String fieldName = (hierarchyLevel.getAddressField() != null) ? hierarchyLevel.getAddressField().getName() : null;
             modelMap.addAttribute("addressField", fieldName);
@@ -313,6 +367,41 @@ public class AddressHierarchyAjaxController {
 			i = names.iterator();
 			while (i.hasNext()) {
 				out.print("{ \"name\": \"" + i.next() + "\" }");
+
+				// print comma as a delimiter for all but the last option in the list
+				if (i.hasNext()) {
+					out.print(",");
+				}
+			}
+		}
+
+		// close the JSON
+		out.print("]");
+	}
+	
+	private void generateAddressHierarchyEntryMapResponse(HttpServletResponse response, Map<Integer,String> entries) throws IOException {
+		response.setContentType("text/json");
+		response.setCharacterEncoding("UTF-8");
+		PrintWriter out = response.getWriter();
+
+		// start the JSON
+		out.print("[");
+
+		if (entries != null) {
+			// sort names
+			List<Map.Entry<Integer, String>> list = new LinkedList<Map.Entry<Integer,String>>(entries.entrySet());
+	    	Collections.sort(list, new Comparator<Map.Entry<Integer, String>>() {
+				public int compare(Entry<Integer, String> o1, Entry<Integer, String> o2) {
+					return (o1.getValue().compareTo(o2.getValue()));
+				}
+			});
+	    	
+			// if there is an exact match, move it to the front of the list
+			Iterator<Map.Entry<Integer, String>> i = list.iterator();
+			Entry<Integer, String> entry;
+			while (i.hasNext()) {
+				entry = i.next();
+				out.print("{ \"id\": " + entry.getKey().toString() + ", \"name\": \"" + entry.getValue().trim() + "\" }");
 
 				// print comma as a delimiter for all but the last option in the list
 				if (i.hasNext()) {

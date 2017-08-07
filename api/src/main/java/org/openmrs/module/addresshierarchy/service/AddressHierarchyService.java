@@ -32,7 +32,7 @@ public interface AddressHierarchyService{
 	 * @param fieldName name of the address field to look up possible values for
 	 * @return a list of the names of the possible valid address values for the specified field; returns an empty list if no matches, should return null only if error
 	 */
-	public List<String> getPossibleAddressValues(PersonAddress address, String fieldName);
+	public Map<Integer,String> getPossibleAddressValues(PersonAddress address, String fieldName);
 	
 	/**
 	 * Given a map of address fields to address field values, returns the names of all entries that are hierarchically valid for the
@@ -46,7 +46,7 @@ public interface AddressHierarchyService{
 	 * @param fieldName name of the address field to look up possible values for
 	 * @return a list of the names of the possible valid address values for the specified field; returns an empty list if no matches, should return null only if error
 	 */
-	public List<String> getPossibleAddressValues(Map<String,String> addressMap, String fieldName);
+	public Map<Integer,String> getPossibleAddressValues(Map<String,String> addressMap, String fieldName);
 	
 	/**
 	 * Given a person address, returns the names of all entries that are hierarchically valid for the
@@ -60,7 +60,7 @@ public interface AddressHierarchyService{
 	 * @param field
 	 * @return a list of the names of the possible valid address hierarchy entries; returns an empty list if no matches, should return null only if error
 	 */
-	public List<String> getPossibleAddressValues(PersonAddress address, AddressField field);
+	public Map<Integer,String> getPossibleAddressValues(PersonAddress address, AddressField field);
 		
 	
 	/**

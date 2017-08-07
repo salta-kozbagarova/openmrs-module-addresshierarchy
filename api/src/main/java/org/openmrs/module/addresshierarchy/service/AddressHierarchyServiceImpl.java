@@ -48,7 +48,7 @@ public class AddressHierarchyServiceImpl implements AddressHierarchyService {
 	}
 	
 	@Transactional(readOnly = true)
-	public List<String> getPossibleAddressValues(PersonAddress address, String fieldName) {	
+	public Map<Integer,String> getPossibleAddressValues(PersonAddress address, String fieldName) {	
 		
 		AddressField field = AddressField.getByName(fieldName);
 	
@@ -60,14 +60,14 @@ public class AddressHierarchyServiceImpl implements AddressHierarchyService {
 	}
 	
 	@Transactional(readOnly = true)
-	public List<String> getPossibleAddressValues(Map<String,String> addressMap, String fieldName) {		
+	public Map<Integer,String> getPossibleAddressValues(Map<String,String> addressMap, String fieldName) {		
 		return getPossibleAddressValues(AddressHierarchyUtil.convertAddressMapToPersonAddress(addressMap),fieldName);
 	}
 	
 	@Transactional(readOnly = true)
-	public List<String> getPossibleAddressValues(PersonAddress address, AddressField field) {	
+	public Map<Integer,String> getPossibleAddressValues(PersonAddress address, AddressField field) {	
 		
-		Map<String,String> possibleAddressValues = new HashMap<String,String>();
+		Map<Integer,String> possibleAddressValues = new HashMap<Integer,String>();
 		AddressHierarchyLevel targetLevel = null;
 		
 		// iterate through the ordered levels until we reach the level associated with the specified fieldName
@@ -92,16 +92,14 @@ public class AddressHierarchyServiceImpl implements AddressHierarchyService {
 		// we use a map here to make this process more efficient
 		for (AddressHierarchyEntry entry : entries) {
 			// see if there is already key for this entry name (converted to lower-case)
-			if(!possibleAddressValues.containsKey(entry.getName().toLowerCase())) {
+			if(!possibleAddressValues.containsKey(entry.getId())) {
 				// if not, add the key/value pair for this entry name, where the value equals the entry name,
 				// and the key is the entry name converted to lower-case
-				possibleAddressValues.put(entry.getName().toLowerCase(), entry.getName());
+				possibleAddressValues.put(entry.getId(), entry.getName());
 			}
 		}
 		
-		List<String> results = new ArrayList<String>();
-		results.addAll(possibleAddressValues.values());
-		return results;
+		return possibleAddressValues;
 	}
 	
 	@Transactional(readOnly = true)
